@@ -1,8 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 
-var builder = WebApplicationBuilder.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
 var config = builder.Configuration;
 var jwtSecret = config["Jwt:Secret"] ?? "default-secret-change-in-production";
@@ -14,9 +15,7 @@ var dbConnection = config.GetConnectionString("DefaultConnection")
 builder.Services.AddCors(options => options.AddDefaultPolicy(
     policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
 
-builder.Services.AddSingleton(new NpgsqlDataSource(
-    new NpgsqlDataSourceBuilder(dbConnection)
-        .Build()));
+builder.Services.AddSingleton(new NpgsqlDataSourceBuilder(dbConnection).Build());
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<BookingService>();

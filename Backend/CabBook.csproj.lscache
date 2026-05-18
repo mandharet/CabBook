@@ -393,12 +393,15 @@ Services/
  WindowsBase.dll
 <NUGET>/
  dapper/2.1.15/lib/net5.0/Dapper.dll
- microsoft.identitymodel.abstractions/7.6.0/lib/net9.0/Microsoft.IdentityModel.Abstractions.dll
- microsoft.identitymodel.jsonwebtokens/7.6.0/lib/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll
- microsoft.identitymodel.logging/7.6.0/lib/net9.0/Microsoft.IdentityModel.Logging.dll
- microsoft.identitymodel.tokens/7.6.0/lib/net9.0/Microsoft.IdentityModel.Tokens.dll
+ microsoft.aspnetcore.authentication.jwtbearer/10.0.0/lib/net10.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+ microsoft.identitymodel.abstractions/8.0.1/lib/net9.0/Microsoft.IdentityModel.Abstractions.dll
+ microsoft.identitymodel.jsonwebtokens/8.0.1/lib/net9.0/Microsoft.IdentityModel.JsonWebTokens.dll
+ microsoft.identitymodel.logging/8.0.1/lib/net9.0/Microsoft.IdentityModel.Logging.dll
+ microsoft.identitymodel.protocols.openidconnect/8.0.1/lib/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+ microsoft.identitymodel.protocols/8.0.1/lib/net9.0/Microsoft.IdentityModel.Protocols.dll
+ microsoft.identitymodel.tokens/8.0.1/lib/net9.0/Microsoft.IdentityModel.Tokens.dll
  npgsql/8.0.4/lib/net8.0/Npgsql.dll
- system.identitymodel.tokens.jwt/7.6.0/lib/net9.0/System.IdentityModel.Tokens.Jwt.dll
+ system.identitymodel.tokens.jwt/8.0.1/lib/net9.0/System.IdentityModel.Tokens.Jwt.dll
 
 [analyzerReferences]
 <DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.8/analyzers/dotnet/cs/
