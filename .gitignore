@@ -1,0 +1,376 @@
+# CabBook .gitignore - Comprehensive
+
+## 🔒 Sensitive Files (NEVER commit)
+*.env
+*.env.local
+*.env.development
+*.env.production
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
+.env.*.local
+secrets.json
+local.settings.json
+
+## 🔑 Credentials & Keys
+.aws/
+.ssh/
+*.pem
+*.key
+*.p12
+*.pfx
+jwt-secret
+api-keys.txt
+credentials.json
+personal-*.json
+
+## 📦 .NET / ASP.NET Core
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.docstates
+.vs/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.log
+*.stackdump
+*.trx
+*.vspx
+*.coverage
+*.opencover.xml
+
+## 🐳 Docker
+.dockerignore
+docker-compose.override.yml
+.env.docker
+postgres_data/
+
+## 🗄️ Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+pgdata/
+mysql_data/
+postgres_data/
+
+## 📁 Build Output
+publish/
+PublishProfiles/
+dist/
+build/
+out/
+
+## 🧪 Test Results
+TestResults/
+*.trx
+*.coverage
+opencover/
+coverage/
+.nyc_output/
+jest-coverage/
+
+## 📝 IDE & Editor Files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.swn
+.DS_Store
+Thumbs.db
+*.sublime-workspace
+*.sublime-project
+.vim/
+.emacs.d/
+*.iml
+.classpath
+.project
+.settings/
+
+## 🔧 JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+
+## 👀 Visual Studio
+.vs/
+.vscode/
+*.VC.db
+*.opendb
+.vscode/launch.json
+.vscode/settings.json
+
+## 📦 Package Managers
+node_modules/
+npm-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnp
+.pnp.js
+
+## 🎯 Build artifacts
+dist/
+build/
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.out
+
+## 📊 Coverage Reports
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+.hypothesis/
+
+## 🔍 Debugging
+*.pdb
+*.mdb
+.vscode/.history/
+.history/
+
+## 🌐 Local Development
+localhost/
+localdb/
+local-db/
+dev-*.json
+temp/
+tmp/
+cache/
+
+## 📋 OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+## 🔗 Symbolic Links
+link
+symlink
+
+## 📦 Package Lock (keep or remove based on preference)
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+## 🎨 Build Artifacts
+*.bak
+*.backup
+*.tmp
+*.temp
+*.cache
+
+## 📁 Project Specific
+/md/Review/          # Old review docs (use consolidated in /md/)
+/md/Initial Docs/    # Old initial docs (use consolidated in /md/)
+upload/
+uploads/
+downloads/
+temp/
+.tmp/
+
+## 🐳 Docker Build Cache
+.dockerignore
+docker-compose.override.yml
+Dockerfile.dev
+
+## 🔐 SSL/TLS Certificates
+*.crt
+*.cert
+*.cer
+*.p7b
+*.p7r
+*.spc
+*.pem
+*.key
+
+## 🌐 Web Development
+node_modules/
+dist/
+.next/
+.nuxt/
+.cache/
+.vuepress/dist/
+.serverless/
+.parcel-cache/
+.eleventy.js
+.gatsby/
+
+## 📚 Documentation Build
+site/
+docs/_build/
+.doctrees/
+
+## 🧩 Dependencies
+vendor/
+Packages/
+packages/
+
+## 💾 Database Backups
+*.bak
+*.backup
+*.sql
+backups/
+db-backups/
+
+## 📊 Analytics & Metrics
+metrics/
+analytics/
+telemetry/
+
+## ⚙️ Build System
+.gradle/
+.m2/
+*.jar
+*.war
+*.ear
+
+## 📱 Mobile App Builds
+ios/Pods/
+android/.gradle
+android/build
+android/app/debug/
+android/app/release/
+
+## 🔧 IDE Caches
+*.class
+.metadata/
+.gradle
+.m2/
+.ivy2/
+
+## 📝 Editor Backups
+*.orig
+*.backup
+*~
+
+## 🚀 Deployment
+*.zip
+*.tar.gz
+*.7z
+*.rar
+
+## 📊 Logs & Monitoring
+logs/
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+*.out
+crash.log
+
+## 🔔 Notifications & Monitoring
+sentry.properties
+.sentry/
+monitoring/
+
+## 🎯 Test Coverage
+lcov.info
+coverage.xml
+*.lcov
+
+## 📈 Performance Metrics
+perf/
+benchmarks/
+.benchmarks/
+
+## 🐛 Debug Files
+gmon.out
+callgrind.out.*
+*.prof
+*.pgo
+
+## 🎓 Learning & Examples
+example/
+examples/
+tutorial/
+sample/
+samples/
+
+## 🗑️ Temporary Build Files
+CMakeFiles/
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+.make/
+.cmake/
+
+## 📦 npm Alternative Package Managers
+.pnp.cjs
+.pnp.js
+pnpm-workspace.yaml
+
+## 🔐 Git Hooks (local)
+.githooks/local/
+
+## 📁 Monorepo
+packages/*/dist/
+packages/*/build/
+packages/*/node_modules/
+
+## ⚡ Runtime Generated
+*.asm
+*.ll
+*.bc
+
+## 🎯 Pre-commit hooks
+.pre-commit-hooks.yaml.local
+
+## 📊 Code Quality Tools
+.pylintrc.local
+.flake8.local
+.eslintignore.local
+.prettierignore.local
+sonar-project.properties
+
+## 🔍 Version Control
+.git/
+.gitattributes
+.gitmodules
+
+## 📋 Comments & Notes
+TODO.txt
+FIXME.txt
+*.todo
+notes/
+.notes/
+
+## 🎨 Static Site Generators
+_site/
+.jekyll-cache/
+.jekyll-metadata
+.eleventyignore
+
+## ✅ Keep These (Important)
+# .gitignore itself
+# .gitattributes
+# LICENSE
+# README.md
+# package.json
+# pnpm-lock.yaml (if using pnpm)
+
+## 🔍 Exception Rules (use ! to un-ignore)
+# Example: !node_modules/important-lib/
+# !dist/production-build/
+# !.env.example

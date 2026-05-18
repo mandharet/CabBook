@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="description" content="Easy cab booking and roster management for your team">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CabBook">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+
+    <title>CabBook - Cab Booking System</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- App Icon (multiple sizes for PWA) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232563eb' width='192' height='192'/><text x='96' y='110' font-size='140' fill='white' text-anchor='middle'>🚗</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232563eb' width='192' height='192' rx='45'/><text x='96' y='110' font-size='140' fill='white' text-anchor='middle'>🚗</text></svg>">
+
+    <!-- Oat UI (8KB lightweight library) -->
+    <link rel="stylesheet" href="https://unpkg.com/oat-css/dist/oat.min.css">
+
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+    <div id="root">
+        <!-- Navigation -->
+        <header class="navbar navbar-dark bg-primary">
+            <div class="navbar-brand">
+                <h1>🚗 CabBook</h1>
+            </div>
+            <nav class="navbar-menu" id="navMenu">
+                <a href="#/" class="nav-item">Home</a>
+                <a href="#/bookings" class="nav-item">My Bookings</a>
+                <span id="adminNav" style="display:none;">
+                    <a href="#/admin" class="nav-item">Admin</a>
+                </span>
+                <a href="#/logout" class="nav-item nav-logout">Logout</a>
+            </nav>
+        </header>
+
+        <!-- Main content -->
+        <main class="container" id="main">
+            <!-- Pages will be rendered here -->
+        </main>
+    </div>
+
+    <!-- Pages -->
+    <script id="auth-page" type="text/html">
+        <div class="form-container">
+            <h2>Login to CabBook</h2>
+            <form id="loginForm" class="form">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Send OTP</button>
+                <p id="otpMessage" style="display:none; margin-top:1rem; color:#666;">
+                    OTP sent! Enter it below:
+                </p>
+                <div id="otpSection" style="display:none;">
+                    <div class="form-group">
+                        <label for="otp">OTP:</label>
+                        <input type="text" id="otp" name="otp" placeholder="6-digit code" maxlength="6">
+                    </div>
+                    <button type="button" class="btn btn-success btn-block" id="verifyBtn">Verify OTP</button>
+                </div>
+            </form>
+        </div>
+    </script>
+
+    <script id="home-page" type="text/html">
+        <div class="home-container">
+            <h2>Welcome to CabBook</h2>
+            <p>Quick cab booking system for your team</p>
+            <div class="home-grid">
+                <div class="card">
+                    <h3>📅 Easy Booking</h3>
+                    <p>Book cabs for multiple days in advance</p>
+                    <a href="#/bookings" class="btn btn-primary">Book Now</a>
+                </div>
+                <div class="card">
+                    <h3>⏰ Auto Freeze</h3>
+                    <p>Rosters automatically freeze at configured times</p>
+                </div>
+                <div class="card">
+                    <h3>📊 Export</h3>
+                    <p>Download frozen rosters as CSV for transport team</p>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="bookings-page" type="text/html">
+        <div class="bookings-container">
+            <h2>My Bookings</h2>
+
+            <div class="card booking-card">
+                <h3>New Booking</h3>
+                <form id="createBookingForm" class="form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="shiftSlot">Shift:</label>
+                            <select id="shiftSlot" name="shiftSlot" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location:</label>
+                            <select id="location" name="location" required></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bookingDate">Date:</label>
+                        <input type="date" id="bookingDate" name="bookingDate" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Booking</button>
+                </form>
+            </div>
+
+            <div class="bookings-list">
+                <h3>Your Bookings</h3>
+                <div id="bookingsGrid" class="bookings-grid">
+                    <!-- Bookings will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="admin-page" type="text/html">
+        <div class="admin-container">
+            <h2>Admin Panel</h2>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="shift-slots">Shift Slots</button>
+                <button class="tab-btn" data-tab="locations">Locations</button>
+                <button class="tab-btn" data-tab="rosters">Rosters</button>
+            </div>
+
+            <!-- Shift Slots Tab -->
+            <div id="shift-slots" class="tab-content active">
+                <h3>Shift Slots</h3>
+                <form id="createShiftForm" class="form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="slotName">Name:</label>
+                            <input type="text" id="slotName" placeholder="Morning">
+                        </div>
+                        <div class="form-group">
+                            <label for="startTime">Start:</label>
+                            <input type="time" id="startTime">
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime">End:</label>
+                            <input type="time" id="endTime">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="freezeTime">Freeze At:</label>
+                            <input type="time" id="freezeTime">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Shift Slot</button>
+                    </div>
+                </form>
+                <div id="shiftSlotsList" class="list"></div>
+            </div>
+
+            <!-- Locations Tab -->
+            <div id="locations" class="tab-content">
+                <h3>Locations</h3>
+                <form id="createLocationForm" class="form">
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label for="locName">Name:</label>
+                            <input type="text" id="locName" placeholder="Office A">
+                        </div>
+                        <div class="form-group flex-1">
+                            <label for="locAddress">Address:</label>
+                            <input type="text" id="locAddress" placeholder="123 Main St">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Location</button>
+                    </div>
+                </form>
+                <div id="locationsList" class="list"></div>
+            </div>
+
+            <!-- Rosters Tab -->
+            <div id="rosters" class="tab-content">
+                <h3>Manage Rosters</h3>
+                <div id="rostersList" class="list"></div>
+            </div>
+        </div>
+    </script>
+
+    <!-- Scripts -->
+    <script src="/api.js"></script>
+    <script src="/app.js"></script>
+</body>
+</html>
