@@ -23,6 +23,7 @@ builder.Services.AddScoped<RosterService>();
 builder.Services.AddScoped<ShiftSlotService>();
 builder.Services.AddScoped<LocationService>();
 builder.Services.AddScoped<TenantService>();
+builder.Services.AddScoped<DatabaseInitializer>();
 
 // JWT Authentication
 var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSecret));
@@ -45,6 +46,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+// Initialize database on startup
+using (var scope = app.Services.CreateScope())
+{
+    var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await initializer.InitializeAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {

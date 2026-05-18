@@ -76,6 +76,7 @@ Program.cs
 Services/
  AuthService.cs
  BookingService.cs
+ DatabaseInitializer.cs
  LocationService.cs
  RosterService.cs
  ShiftSlotService.cs
