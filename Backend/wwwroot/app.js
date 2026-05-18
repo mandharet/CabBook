@@ -76,9 +76,13 @@ const App = {
     async updateUI() {
         const { currentPage } = this.state;
 
-        // Update navigation
+        // Update navigation - show admin nav only if user is admin
         document.getElementById('adminNav').style.display =
             this.state.user?.role === 'Admin' ? 'inline' : 'none';
+
+        // Show/hide logout button based on authentication
+        document.querySelector('.nav-logout').style.display =
+            this.state.user ? 'inline' : 'none';
 
         const main = document.getElementById('main');
 

@@ -23,11 +23,71 @@ public class DatabaseInitializer(NpgsqlDataSource dataSource, ILogger<DatabaseIn
             await cmd.ExecuteNonQueryAsync();
 
             _logger.LogInformation("Database schema initialized successfully");
+
+            // Seed test data
+            await SeedTestDataAsync(conn);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to initialize database schema");
             throw;
+        }
+    }
+
+    private async Task SeedTestDataAsync(NpgsqlConnection conn)
+    {
+        try
+        {
+            // Check if test data already exists
+            using var checkCmd = conn.CreateCommand();
+            checkCmd.CommandText = "SELECT COUNT(*) FROM tenants";
+            var count = (long?)await checkCmd.ExecuteScalarAsync() ?? 0;
+
+            if (count > 0)
+            {
+                _logger.LogInformation("Test data already exists, skipping seed");
+                return;
+            }
+
+            _logger.LogInformation("Seeding test data...");
+
+            // Insert test tenant
+            using var tenantCmd = conn.CreateCommand();
+            tenantCmd.CommandText = @"
+                INSERT INTO tenants (name, time_zone, is_active, created_at, updated_at)
+                VALUES ('Test Company', 'UTC', true, NOW(), NOW())
+                RETURNING id";
+            var tenantId = (long?)await tenantCmd.ExecuteScalarAsync() ?? 1;
+
+            // Insert test user
+            using var userCmd = conn.CreateCommand();
+            userCmd.CommandText = @"
+                INSERT INTO users (tenant_id, email, phone_number, name, role, is_active, created_at, updated_at)
+                VALUES (@TenantId, 'test@example.com', '1234567890', 'Test User', 'Employee', true, NOW(), NOW())";
+            userCmd.Parameters.AddWithValue("@TenantId", tenantId);
+            await userCmd.ExecuteNonQueryAsync();
+
+            // Insert test shift slot
+            using var shiftCmd = conn.CreateCommand();
+            shiftCmd.CommandText = @"
+                INSERT INTO shift_slots (tenant_id, name, start_time, end_time, freeze_time, freeze_advance_days, is_active, created_at, updated_at)
+                VALUES (@TenantId, 'Morning', '06:00:00', '14:00:00', '23:00:00', 1, true, NOW(), NOW())";
+            shiftCmd.Parameters.AddWithValue("@TenantId", tenantId);
+            await shiftCmd.ExecuteNonQueryAsync();
+
+            // Insert test location
+            using var locCmd = conn.CreateCommand();
+            locCmd.CommandText = @"
+                INSERT INTO locations (tenant_id, name, address, is_active, created_at, updated_at)
+                VALUES (@TenantId, 'Office A', '123 Main Street', true, NOW(), NOW())";
+            locCmd.Parameters.AddWithValue("@TenantId", tenantId);
+            await locCmd.ExecuteNonQueryAsync();
+
+            _logger.LogInformation("Test data seeded successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to seed test data (may already exist)");
         }
     }
 
