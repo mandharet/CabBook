@@ -38,18 +38,19 @@ public class DatabaseInitializer(NpgsqlDataSource dataSource, ILogger<DatabaseIn
     {
         try
         {
-            // Check if test data already exists
+            // Check if tenants already exist
             using var checkCmd = conn.CreateCommand();
             checkCmd.CommandText = "SELECT COUNT(*) FROM tenants";
             var count = (long?)await checkCmd.ExecuteScalarAsync() ?? 0;
 
             if (count > 0)
             {
-                _logger.LogInformation("Test data already exists, skipping seed");
+                _logger.LogInformation("Database already has tenants, skipping test data seed");
+                _logger.LogInformation("To initialize a new tenant, call: POST /api/setup/initialize");
                 return;
             }
 
-            _logger.LogInformation("Seeding test data...");
+            _logger.LogInformation("Seeding test data for development...");
 
             // Insert test tenant
             using var tenantCmd = conn.CreateCommand();
@@ -59,11 +60,19 @@ public class DatabaseInitializer(NpgsqlDataSource dataSource, ILogger<DatabaseIn
                 RETURNING id";
             var tenantId = (long?)await tenantCmd.ExecuteScalarAsync() ?? 1;
 
-            // Insert test user
+            // Insert test admin user
+            using var adminCmd = conn.CreateCommand();
+            adminCmd.CommandText = @"
+                INSERT INTO users (tenant_id, email, phone_number, name, pickup_address, dropoff_address, address_status, role, status, is_active, created_at, updated_at)
+                VALUES (@TenantId, 'admin@example.com', '9999999999', 'Admin User', '123 Admin Street', '456 Admin Avenue', 'approved', 'Admin', 'approved', true, NOW(), NOW())";
+            adminCmd.Parameters.AddWithValue("@TenantId", tenantId);
+            await adminCmd.ExecuteNonQueryAsync();
+
+            // Insert test employee user
             using var userCmd = conn.CreateCommand();
             userCmd.CommandText = @"
                 INSERT INTO users (tenant_id, email, phone_number, name, pickup_address, dropoff_address, address_status, role, status, is_active, created_at, updated_at)
-                VALUES (@TenantId, 'test@example.com', '1234567890', 'Test User', '123 Main Street', '456 Oak Avenue', 'approved', 'Employee', 'approved', true, NOW(), NOW())";
+                VALUES (@TenantId, 'employee@example.com', '1234567890', 'Test Employee', '123 Main Street', '456 Oak Avenue', 'approved', 'Employee', 'approved', true, NOW(), NOW())";
             userCmd.Parameters.AddWithValue("@TenantId", tenantId);
             await userCmd.ExecuteNonQueryAsync();
 
