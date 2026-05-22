@@ -2,249 +2,246 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-    <meta name="description" content="Easy cab booking and roster management for your team">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Smart cab booking and roster management">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="CabBook">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="format-detection" content="telephone=no">
 
-    <title>CabBook - Cab Booking System</title>
-
-    <!-- PWA Manifest -->
+    <title>CabBook</title>
     <link rel="manifest" href="/manifest.json">
-
-    <!-- App Icon (multiple sizes for PWA) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232563eb' width='192' height='192'/><text x='96' y='110' font-size='140' fill='white' text-anchor='middle'>🚗</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%232563eb' width='192' height='192' rx='45'/><text x='96' y='110' font-size='140' fill='white' text-anchor='middle'>🚗</text></svg>">
-
-    <!-- Oat UI (8KB lightweight library) -->
-    <link rel="stylesheet" href="https://unpkg.com/oat-css/dist/oat.min.css">
-
-    <!-- Custom styles -->
     <link rel="stylesheet" href="/app.css">
 </head>
 <body>
-    <div id="root">
-        <!-- Navigation -->
-        <header class="navbar navbar-dark bg-primary">
-            <div class="navbar-brand">
-                <h1>🚗 CabBook</h1>
-            </div>
-            <nav class="navbar-menu" id="navMenu">
-                <a href="#/" class="nav-item">Home</a>
-                <a href="#/bookings" class="nav-item">My Bookings</a>
-                <span id="adminNav" style="display:none;">
-                    <a href="#/admin" class="nav-item">Admin</a>
-                </span>
-                <a href="#/logout" class="nav-item nav-logout">Logout</a>
-            </nav>
-        </header>
+    <div id="app">
+        <!-- Navigation - Hidden on auth pages -->
+        <nav class="navbar" id="navbar" style="display:none;">
+            <div class="navbar-brand">CabBook</div>
+        </nav>
 
-        <!-- Main content -->
-        <main class="container" id="main">
-            <!-- Pages will be rendered here -->
-        </main>
+        <!-- Main Content -->
+        <main id="main" class="main-content"></main>
+
+        <!-- Bottom Navigation - Hidden on auth pages -->
+        <nav class="bottom-nav" id="bottomNav" style="display:none;">
+            <a href="#/" class="nav-item active" data-page="home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Home</span>
+            </a>
+            <a href="#/bookings" class="nav-item" data-page="bookings">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">Bookings</span>
+            </a>
+            <a href="#/admin" class="nav-item" id="adminNav" style="display:none;" data-page="admin">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Admin</span>
+            </a>
+            <a href="#/logout" class="nav-item" data-page="logout">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-label">Exit</span>
+            </a>
+        </nav>
     </div>
 
-    <!-- Pages -->
-    <script id="auth-page" type="text/html">
-        <div class="form-container">
-            <div class="tabs" style="margin-bottom: 1.5rem;">
-                <button class="tab-btn auth-tab-btn active" data-tab="login">Login</button>
-                <button class="tab-btn auth-tab-btn" data-tab="signup">Sign Up</button>
-            </div>
-
+    <!-- AUTH PAGE -->
+    <template id="auth-page">
+        <div class="auth-wrapper">
             <!-- Login Tab -->
-            <div id="login" class="tab-content auth-tab active">
-                <h2>Login to CabBook</h2>
-                <form id="loginForm" class="form">
-                    <div class="form-group">
-                        <label for="email">Email:</label>
-                        <input type="email" id="email" name="email" required placeholder="Enter your email">
+            <div class="auth-tab active" id="login-tab">
+                <div class="auth-header">
+                    <h1>CabBook</h1>
+                    <p>Book your ride</p>
+                </div>
+
+                <form id="loginForm" class="auth-form">
+                    <div class="form-field">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Send OTP</button>
-                    <p id="otpMessage" style="display:none; margin-top:1rem; color:#666;">
-                        OTP sent! Enter it below:
-                    </p>
-                    <div id="otpSection" style="display:none;">
-                        <div class="form-group">
-                            <label for="otp">OTP:</label>
-                            <input type="text" id="otp" name="otp" placeholder="6-digit code" maxlength="6">
+
+                    <button type="submit" class="btn-primary btn-large">Send OTP</button>
+
+                    <div id="otpPrompt" class="otp-section" style="display:none;">
+                        <div class="form-field">
+                            <label>6-Digit OTP</label>
+                            <input type="text" id="otp" placeholder="000000" maxlength="6" pattern="[0-9]" required>
                         </div>
-                        <button type="button" class="btn btn-success btn-block" id="verifyBtn">Verify OTP</button>
+                        <button type="button" class="btn-primary btn-large" id="verifyBtn">Verify & Login</button>
                     </div>
+
+                    <div class="auth-divider">or</div>
+
+                    <button type="button" class="btn-secondary btn-large" id="switchToSignup">Create Account</button>
                 </form>
             </div>
 
             <!-- Signup Tab -->
-            <div id="signup" class="tab-content auth-tab">
-                <h2>Sign Up for CabBook</h2>
-                <form id="signupForm" class="form">
-                    <div class="form-group">
-                        <label for="signupEmail">Email (required):</label>
-                        <input type="email" id="signupEmail" name="email" required placeholder="your@email.com">
+            <div class="auth-tab" id="signup-tab">
+                <div class="auth-header">
+                    <h1>Join CabBook</h1>
+                    <p>Get started in seconds</p>
+                </div>
+
+                <form id="signupForm" class="auth-form">
+                    <div class="form-field">
+                        <label>Email <span class="required">*</span></label>
+                        <input type="email" id="signupEmail" placeholder="your@email.com" required>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="signupName">Name (optional):</label>
-                            <input type="text" id="signupName" name="name" placeholder="Your full name">
-                        </div>
-                        <div class="form-group">
-                            <label for="signupPhone">Phone (optional):</label>
-                            <input type="tel" id="signupPhone" name="phone" placeholder="+1 234 567 8900">
-                        </div>
+
+                    <div class="form-field">
+                        <label>Full Name</label>
+                        <input type="text" id="signupName" placeholder="John Doe">
                     </div>
-                    <div class="form-group">
-                        <label for="signupPickup">📍 Pickup Address (required):</label>
-                        <input type="text" id="signupPickup" name="pickup" required placeholder="Your usual pickup location">
+
+                    <div class="form-field">
+                        <label>Phone</label>
+                        <input type="tel" id="signupPhone" placeholder="+1 (555) 000-0000">
                     </div>
-                    <div class="form-group">
-                        <label for="signupDropoff">📍 Dropoff Address (required):</label>
-                        <input type="text" id="signupDropoff" name="dropoff" required placeholder="Your usual dropoff location">
+
+                    <div class="form-field">
+                        <label>Pickup Location <span class="required">*</span></label>
+                        <input type="text" id="signupPickup" placeholder="Enter address" required>
                     </div>
-                    <button type="submit" class="btn btn-success btn-block">Sign Up</button>
-                    <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
-                        After signing up, an admin will review and approve your account and addresses.
-                    </p>
+
+                    <div class="form-field">
+                        <label>Dropoff Location <span class="required">*</span></label>
+                        <input type="text" id="signupDropoff" placeholder="Enter address" required>
+                    </div>
+
+                    <p class="form-hint">Admin will review and approve your account</p>
+
+                    <button type="submit" class="btn-primary btn-large">Create Account</button>
+                    <button type="button" class="btn-secondary btn-large" id="switchToLogin">Back to Login</button>
                 </form>
             </div>
         </div>
-    </script>
+    </template>
 
-    <script id="home-page" type="text/html">
-        <div class="home-container">
-            <h2>Welcome to CabBook</h2>
-            <p>Quick cab booking system for your team</p>
-            <div class="home-grid">
-                <div class="card">
-                    <h3>📅 Easy Booking</h3>
-                    <p>Book cabs for multiple days in advance</p>
-                    <a href="#/bookings" class="btn btn-primary">Book Now</a>
-                </div>
-                <div class="card">
-                    <h3>⏰ Auto Freeze</h3>
-                    <p>Rosters automatically freeze at configured times</p>
-                </div>
-                <div class="card">
-                    <h3>📊 Export</h3>
-                    <p>Download frozen rosters as CSV for transport team</p>
-                </div>
+    <!-- HOME PAGE -->
+    <template id="home-page">
+        <div class="page-container">
+            <div class="welcome-section">
+                <h2 id="userName"></h2>
+                <p class="subtitle">Welcome back</p>
+            </div>
+
+            <div class="quick-actions">
+                <a href="#/bookings" class="action-card">
+                    <div class="action-icon">📅</div>
+                    <h3>New Booking</h3>
+                    <p>Book a ride</p>
+                </a>
+
+                <a href="#/bookings" class="action-card">
+                    <div class="action-icon">🔄</div>
+                    <h3>My Bookings</h3>
+                    <p>View history</p>
+                </a>
+
+                <a href="#/" class="action-card">
+                    <div class="action-icon">ℹ️</div>
+                    <h3>Support</h3>
+                    <p>Get help</p>
+                </a>
             </div>
         </div>
-    </script>
+    </template>
 
-    <script id="bookings-page" type="text/html">
-        <div class="bookings-container">
+    <!-- BOOKINGS PAGE -->
+    <template id="bookings-page">
+        <div class="page-container">
             <h2>My Bookings</h2>
 
-            <div class="card booking-card">
+            <div class="booking-form-card">
                 <h3>New Booking</h3>
-                <form id="createBookingForm" class="form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="shiftSlot">Shift:</label>
-                            <select id="shiftSlot" name="shiftSlot" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label for="location">Location:</label>
-                            <select id="location" name="location" required></select>
-                        </div>
+                <form id="bookingForm">
+                    <div class="form-field">
+                        <label>Select Shift</label>
+                        <select id="shiftSelect" required></select>
                     </div>
-                    <div class="form-group">
-                        <label for="bookingDate">Date:</label>
-                        <input type="date" id="bookingDate" name="bookingDate" required>
+
+                    <div class="form-field">
+                        <label>Select Location</label>
+                        <select id="locationSelect" required></select>
                     </div>
-                    <button type="submit" class="btn btn-primary">Create Booking</button>
+
+                    <div class="form-field">
+                        <label>Date</label>
+                        <input type="date" id="bookingDate" required>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-large">Book Ride</button>
                 </form>
             </div>
 
-            <div class="bookings-list">
-                <h3>Your Bookings</h3>
-                <div id="bookingsGrid" class="bookings-grid">
-                    <!-- Bookings will be rendered here -->
-                </div>
-            </div>
+            <h3 style="margin-top: 2rem;">Your Bookings</h3>
+            <div id="bookingsContainer" class="bookings-list"></div>
         </div>
-    </script>
+    </template>
 
-    <script id="admin-page" type="text/html">
-        <div class="admin-container">
-            <h2>Admin Panel</h2>
+    <!-- ADMIN PAGE -->
+    <template id="admin-page">
+        <div class="page-container">
+            <h2>Admin Dashboard</h2>
 
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="pending-users">Pending Users</button>
-                <button class="tab-btn" data-tab="shift-slots">Shift Slots</button>
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="pending">Pending</button>
+                <button class="tab-btn" data-tab="shifts">Shifts</button>
                 <button class="tab-btn" data-tab="locations">Locations</button>
                 <button class="tab-btn" data-tab="rosters">Rosters</button>
             </div>
 
-            <!-- Pending Users Tab -->
-            <div id="pending-users" class="tab-content active">
-                <h3>User Approvals</h3>
-                <p style="color: #666; margin-bottom: 1.5rem;">Pending signup requests waiting for your approval:</p>
-                <div id="pendingUsersList" class="list">
-                    <!-- Pending users will be rendered here -->
-                </div>
+            <!-- Pending Users -->
+            <div class="tab-pane active" id="pending">
+                <div id="pendingContainer" class="pending-list"></div>
             </div>
 
-            <!-- Shift Slots Tab -->
-            <div id="shift-slots" class="tab-content active">
-                <h3>Shift Slots</h3>
-                <form id="createShiftForm" class="form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="slotName">Name:</label>
-                            <input type="text" id="slotName" placeholder="Morning">
-                        </div>
-                        <div class="form-group">
-                            <label for="startTime">Start:</label>
-                            <input type="time" id="startTime">
-                        </div>
-                        <div class="form-group">
-                            <label for="endTime">End:</label>
-                            <input type="time" id="endTime">
-                        </div>
+            <!-- Shift Slots -->
+            <div class="tab-pane" id="shifts">
+                <form id="shiftForm" class="admin-form">
+                    <div class="form-field">
+                        <label>Shift Name</label>
+                        <input type="text" id="shiftName" placeholder="Morning" required>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="freezeTime">Freeze At:</label>
-                            <input type="time" id="freezeTime">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Shift Slot</button>
+                    <div class="form-field">
+                        <label>Start Time</label>
+                        <input type="time" id="shiftStart" required>
                     </div>
+                    <div class="form-field">
+                        <label>End Time</label>
+                        <input type="time" id="shiftEnd" required>
+                    </div>
+                    <div class="form-field">
+                        <label>Freeze Time (optional)</label>
+                        <input type="time" id="shiftFreeze">
+                    </div>
+                    <button type="submit" class="btn-primary btn-large">Add Shift</button>
                 </form>
-                <div id="shiftSlotsList" class="list"></div>
+                <div id="shiftsContainer" class="items-list"></div>
             </div>
 
-            <!-- Locations Tab -->
-            <div id="locations" class="tab-content">
-                <h3>Locations</h3>
-                <form id="createLocationForm" class="form">
-                    <div class="form-row">
-                        <div class="form-group flex-1">
-                            <label for="locName">Name:</label>
-                            <input type="text" id="locName" placeholder="Office A">
-                        </div>
-                        <div class="form-group flex-1">
-                            <label for="locAddress">Address:</label>
-                            <input type="text" id="locAddress" placeholder="123 Main St">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Add Location</button>
+            <!-- Locations -->
+            <div class="tab-pane" id="locations">
+                <form id="locationForm" class="admin-form">
+                    <div class="form-field">
+                        <label>Location Name</label>
+                        <input type="text" id="locName" placeholder="Office A" required>
                     </div>
+                    <div class="form-field">
+                        <label>Address</label>
+                        <input type="text" id="locAddress" placeholder="123 Main St" required>
+                    </div>
+                    <button type="submit" class="btn-primary btn-large">Add Location</button>
                 </form>
-                <div id="locationsList" class="list"></div>
+                <div id="locationsContainer" class="items-list"></div>
             </div>
 
-            <!-- Rosters Tab -->
-            <div id="rosters" class="tab-content">
-                <h3>Manage Rosters</h3>
-                <div id="rostersList" class="list"></div>
+            <!-- Rosters -->
+            <div class="tab-pane" id="rosters">
+                <div id="rostersContainer" class="items-list"></div>
             </div>
         </div>
-    </script>
+    </template>
 
     <!-- Scripts -->
     <script src="/api.js"></script>

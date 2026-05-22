@@ -1,4 +1,4 @@
-// CabBook SPA - Single Page Application with vanilla JS
+// CabBook SPA - Minimal & Professional
 const App = {
     state: {
         user: null,
@@ -9,15 +9,12 @@ const App = {
         locations: [],
         rosters: [],
         pendingUsers: [],
-        tenantId: 1 // Default, should come from config
+        tenantId: 1
     },
 
     async init() {
         this.restoreAuth();
         this.setupRouter();
-        this.setupEventListeners();
-
-        // Load initial page
         window.addEventListener('hashchange', () => this.router());
         this.router();
     },
@@ -50,7 +47,6 @@ const App = {
             '/admin': 'admin',
             '/logout': 'logout'
         };
-
         window.routes = routes;
     },
 
@@ -76,14 +72,32 @@ const App = {
 
     async updateUI() {
         const { currentPage } = this.state;
+        const navbar = document.getElementById('navbar');
+        const bottomNav = document.getElementById('bottomNav');
 
-        // Update navigation - show admin nav only if user is admin
-        document.getElementById('adminNav').style.display =
-            this.state.user?.role === 'Admin' ? 'inline' : 'none';
+        // Show/hide navigation based on auth state
+        if (!this.state.user) {
+            navbar.style.display = 'none';
+            bottomNav.style.display = 'none';
+        } else {
+            navbar.style.display = 'block';
+            bottomNav.style.display = 'flex';
+        }
 
-        // Show/hide logout button based on authentication
-        document.querySelector('.nav-logout').style.display =
-            this.state.user ? 'inline' : 'none';
+        // Update active nav item
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        const activeNav = document.querySelector(`[data-page="${currentPage}"]`);
+        if (activeNav) {
+            activeNav.classList.add('active');
+        }
+
+        // Show/hide admin nav
+        const adminNav = document.getElementById('adminNav');
+        if (adminNav) {
+            adminNav.style.display = this.state.user?.role === 'Admin' ? 'block' : 'none';
+        }
 
         const main = document.getElementById('main');
 
@@ -93,6 +107,7 @@ const App = {
                 this.setupAuthPage();
             } else if (currentPage === 'home') {
                 main.innerHTML = document.getElementById('home-page').innerHTML;
+                this.setupHomePage();
             } else if (currentPage === 'bookings') {
                 main.innerHTML = document.getElementById('bookings-page').innerHTML;
                 await this.setupBookingsPage();
@@ -102,36 +117,42 @@ const App = {
             }
         } catch (error) {
             console.error('Error rendering page:', error);
-            main.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            main.innerHTML = `<div style="padding: 2rem; text-align: center; color: #d32f2f;">Error: ${error.message}</div>`;
         }
     },
 
     setupAuthPage() {
-        // Tab switching for auth pages
-        document.querySelectorAll('.auth-tab-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-                e.target.classList.add('active');
-                document.getElementById(e.target.dataset.tab).classList.add('active');
-            };
-        });
-
-        // Login form
-        const form = document.getElementById('loginForm');
-        const otpSection = document.getElementById('otpSection');
-        const otpMessage = document.getElementById('otpMessage');
+        const loginTab = document.getElementById('login-tab');
+        const signupTab = document.getElementById('signup-tab');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const switchToSignup = document.getElementById('switchToSignup');
+        const switchToLogin = document.getElementById('switchToLogin');
+        const otpPrompt = document.getElementById('otpPrompt');
         const verifyBtn = document.getElementById('verifyBtn');
 
-        form.onsubmit = async (e) => {
+        // Tab switching
+        switchToSignup.onclick = (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            loginTab.classList.remove('active');
+            signupTab.classList.add('active');
+        };
+
+        switchToLogin.onclick = (e) => {
+            e.preventDefault();
+            signupTab.classList.remove('active');
+            loginTab.classList.add('active');
+        };
+
+        // Login form
+        loginForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
 
             try {
                 await API.auth.sendOtp(email, this.state.tenantId);
-                otpMessage.style.display = 'block';
-                otpSection.style.display = 'block';
-                form.querySelector('button[type="submit"]').disabled = true;
+                otpPrompt.style.display = 'block';
+                loginForm.querySelector('button[type="submit"]').disabled = true;
 
                 verifyBtn.onclick = async () => {
                     const otp = document.getElementById('otp').value;
@@ -151,7 +172,6 @@ const App = {
         };
 
         // Signup form
-        const signupForm = document.getElementById('signupForm');
         signupForm.onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('signupEmail').value;
@@ -162,32 +182,41 @@ const App = {
 
             try {
                 await API.auth.signup(email, phone, name, pickupAddress, dropoffAddress, this.state.tenantId);
-                alert('Signup successful! Admin will review and approve your account and addresses.');
+                alert('Signup successful! Admin will review and approve your account.');
                 signupForm.reset();
-                // Switch back to login tab
-                document.querySelector('[data-tab="login"]').click();
+                signupTab.classList.remove('active');
+                loginTab.classList.add('active');
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         };
     },
 
+    setupHomePage() {
+        const userNameEl = document.getElementById('userName');
+        if (this.state.user?.email) {
+            userNameEl.textContent = `Hi, ${this.state.user.email.split('@')[0]}`;
+        }
+    },
+
     async setupBookingsPage() {
         await this.loadConfig();
         await this.loadBookings();
 
-        const form = document.getElementById('createBookingForm');
-        const shiftSlotSelect = document.getElementById('shiftSlot');
-        const locationSelect = document.getElementById('location');
+        const form = document.getElementById('bookingForm');
+        const shiftSelect = document.getElementById('shiftSelect');
+        const locationSelect = document.getElementById('locationSelect');
 
         // Populate dropdowns
+        shiftSelect.innerHTML = '<option value="">Select a shift</option>';
         this.state.config?.ShiftSlots?.forEach(slot => {
             const option = document.createElement('option');
             option.value = slot.id;
             option.textContent = `${slot.name} (${this.formatTime(slot.start_time)} - ${this.formatTime(slot.end_time)})`;
-            shiftSlotSelect.appendChild(option);
+            shiftSelect.appendChild(option);
         });
 
+        locationSelect.innerHTML = '<option value="">Select a location</option>';
         this.state.config?.Locations?.forEach(loc => {
             const option = document.createElement('option');
             option.value = loc.id;
@@ -195,7 +224,7 @@ const App = {
             locationSelect.appendChild(option);
         });
 
-        // Set min date (tomorrow)
+        // Set min date
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
         document.getElementById('bookingDate').min = tomorrow.toISOString().split('T')[0];
@@ -203,8 +232,8 @@ const App = {
         form.onsubmit = async (e) => {
             e.preventDefault();
 
-            const shiftSlotId = parseInt(document.getElementById('shiftSlot').value);
-            const locationId = parseInt(document.getElementById('location').value);
+            const shiftSlotId = parseInt(shiftSelect.value);
+            const locationId = parseInt(locationSelect.value);
             const bookingDate = new Date(document.getElementById('bookingDate').value);
 
             try {
@@ -212,21 +241,21 @@ const App = {
                 alert('Booking created!');
                 await this.loadBookings();
                 form.reset();
+                this.renderBookingsList();
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         };
 
-        // Render bookings list
         this.renderBookingsList();
     },
 
     renderBookingsList() {
-        const grid = document.getElementById('bookingsGrid');
-        grid.innerHTML = '';
+        const container = document.getElementById('bookingsContainer');
+        container.innerHTML = '';
 
         if (!this.state.bookings.length) {
-            grid.innerHTML = '<p>No bookings yet</p>';
+            container.innerHTML = '<div class="empty-state">No bookings yet</div>';
             return;
         }
 
@@ -235,15 +264,15 @@ const App = {
             const loc = this.state.config?.Locations?.find(l => l.id === booking.location_id);
 
             const card = document.createElement('div');
-            card.className = 'card booking-item';
+            card.className = 'booking-card';
             card.innerHTML = `
                 <h4>${new Date(booking.booking_date).toLocaleDateString()}</h4>
                 <p><strong>Shift:</strong> ${slot?.name || 'Unknown'}</p>
                 <p><strong>Location:</strong> ${loc?.name || 'Unknown'}</p>
-                <p><strong>Status:</strong> <span class="badge badge-${booking.status === 'Confirmed' ? 'success' : 'warning'}">${booking.status}</span></p>
-                <button class="btn btn-small btn-danger" onclick="App.cancelBooking(${booking.id})">Cancel</button>
+                <p><strong>Status:</strong> <span class="badge">${booking.status}</span></p>
+                <button class="btn-danger btn-small" onclick="App.cancelBooking(${booking.id})">Cancel</button>
             `;
-            grid.appendChild(card);
+            container.appendChild(card);
         });
     },
 
@@ -251,8 +280,8 @@ const App = {
         if (confirm('Cancel this booking?')) {
             try {
                 await API.bookings.cancel(id);
-                alert('Booking cancelled');
                 await this.loadBookings();
+                this.renderBookingsList();
             } catch (error) {
                 alert('Error: ' + error.message);
             }
@@ -268,31 +297,29 @@ const App = {
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.onclick = (e) => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
                 e.target.classList.add('active');
                 document.getElementById(e.target.dataset.tab).classList.add('active');
             };
         });
 
-        // Render pending users
         this.renderPendingUsersList();
 
-        // Shift Slots
-        const createShiftForm = document.getElementById('createShiftForm');
-        createShiftForm.onsubmit = async (e) => {
+        // Shift form
+        const shiftForm = document.getElementById('shiftForm');
+        shiftForm.onsubmit = async (e) => {
             e.preventDefault();
-
-            const name = document.getElementById('slotName').value;
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            const freezeTime = document.getElementById('freezeTime').value || null;
+            const name = document.getElementById('shiftName').value;
+            const startTime = document.getElementById('shiftStart').value;
+            const endTime = document.getElementById('shiftEnd').value;
+            const freezeTime = document.getElementById('shiftFreeze').value || null;
 
             try {
                 await API.shiftSlots.create(name, startTime, endTime, freezeTime);
                 alert('Shift slot created!');
                 await this.loadConfig();
                 this.renderShiftSlotsList();
-                createShiftForm.reset();
+                shiftForm.reset();
             } catch (error) {
                 alert('Error: ' + error.message);
             }
@@ -300,11 +327,10 @@ const App = {
 
         this.renderShiftSlotsList();
 
-        // Locations
-        const createLocForm = document.getElementById('createLocationForm');
-        createLocForm.onsubmit = async (e) => {
+        // Location form
+        const locForm = document.getElementById('locationForm');
+        locForm.onsubmit = async (e) => {
             e.preventDefault();
-
             const name = document.getElementById('locName').value;
             const address = document.getElementById('locAddress').value;
 
@@ -313,126 +339,128 @@ const App = {
                 alert('Location created!');
                 await this.loadConfig();
                 this.renderLocationsList();
-                createLocForm.reset();
+                locForm.reset();
             } catch (error) {
                 alert('Error: ' + error.message);
             }
         };
 
         this.renderLocationsList();
-
-        // Rosters
         this.renderRostersList();
     },
 
-    renderShiftSlotsList() {
-        const list = document.getElementById('shiftSlotsList');
-        list.innerHTML = '';
-
-        this.state.config?.ShiftSlots?.forEach(slot => {
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.innerHTML = `
-                <div>
-                    <strong>${slot.name}</strong><br>
-                    ${this.formatTime(slot.start_time)} - ${this.formatTime(slot.end_time)}
-                    ${slot.freeze_time ? `<br>Freezes at: ${this.formatTime(slot.freeze_time)}` : ''}
-                </div>
-                <div>
-                    <button class="btn btn-small btn-danger" onclick="App.deleteShiftSlot(${slot.id})">Delete</button>
-                </div>
-            `;
-            list.appendChild(item);
-        });
-    },
-
-    renderLocationsList() {
-        const list = document.getElementById('locationsList');
-        list.innerHTML = '';
-
-        this.state.config?.Locations?.forEach(loc => {
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.innerHTML = `
-                <div>
-                    <strong>${loc.name}</strong><br>
-                    ${loc.address || 'No address'}
-                </div>
-                <div>
-                    <button class="btn btn-small btn-danger" onclick="App.deleteLocation(${loc.id})">Delete</button>
-                </div>
-            `;
-            list.appendChild(item);
-        });
-    },
-
-    renderRostersList() {
-        const list = document.getElementById('rostersList');
-        list.innerHTML = '';
-
-        this.state.rosters?.forEach(roster => {
-            const slot = this.state.config?.ShiftSlots?.find(s => s.id === roster.shift_slot_id);
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.innerHTML = `
-                <div>
-                    <strong>${slot?.name || 'Unknown'}</strong> - ${new Date(roster.roster_date).toLocaleDateString()}<br>
-                    Status: <span class="badge badge-${roster.status === 'Open' ? 'primary' : 'success'}">${roster.status}</span>
-                </div>
-                <div>
-                    ${roster.status === 'Open' ? `<button class="btn btn-small btn-warning" onclick="App.freezeRoster(${roster.id})">Freeze</button>` : ''}
-                    ${roster.status !== 'Open' ? `<button class="btn btn-small btn-info" onclick="App.exportRoster(${roster.id})">Export</button>` : ''}
-                </div>
-            `;
-            list.appendChild(item);
-        });
-    },
-
     renderPendingUsersList() {
-        const list = document.getElementById('pendingUsersList');
-        if (!list) return;
+        const container = document.getElementById('pendingContainer');
+        container.innerHTML = '';
 
-        list.innerHTML = '';
-
-        if (!this.state.pendingUsers || this.state.pendingUsers.length === 0) {
-            list.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">No pending approvals</p>';
+        if (!this.state.pendingUsers?.length) {
+            container.innerHTML = '<div class="empty-state">No pending approvals</div>';
             return;
         }
 
         this.state.pendingUsers.forEach(user => {
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            const addressStatus = user.address_status === 'approved'
-                ? '✅ Addresses approved'
-                : '⏳ Addresses pending';
+            const card = document.createElement('div');
+            card.className = 'pending-card';
+            const addressStatus = user.address_status === 'approved' ? '✓ Approved' : '⏳ Pending';
 
-            item.innerHTML = `
-                <div style="flex: 1;">
-                    <strong>${user.name || 'N/A'}</strong><br>
-                    ${user.email}<br>
-                    ${user.phone_number ? `📞 ${user.phone_number}<br>` : ''}
-                    <div style="margin-top: 0.5rem; background: #f0f0f0; padding: 0.5rem; border-radius: 4px; font-size: 0.85rem;">
-                        <strong>📍 Pickup:</strong> ${user.pickup_address || 'Not provided'}<br>
-                        <strong>📍 Dropoff:</strong> ${user.dropoff_address || 'Not provided'}<br>
-                        <small style="color: #666;">${addressStatus}</small>
-                    </div>
-                    <small style="color: #999; margin-top: 0.5rem;">Requested: ${new Date(user.created_at).toLocaleDateString()}</small>
+            card.innerHTML = `
+                <h4>${user.name || 'N/A'}</h4>
+                <div class="user-info">
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    ${user.phone_number ? `<p><strong>Phone:</strong> ${user.phone_number}</p>` : ''}
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                    <button class="btn btn-small btn-success" onclick="App.approveUser(${user.id})">Approve User</button>
-                    <button class="btn btn-small btn-info" onclick="App.approveUserAddresses(${user.id})">Approve Addresses</button>
-                    <button class="btn btn-small btn-danger" onclick="App.rejectUser(${user.id})">Reject</button>
+                <div class="address-section">
+                    <p><strong>Pickup:</strong> ${user.pickup_address || 'N/A'}</p>
+                    <p><strong>Dropoff:</strong> ${user.dropoff_address || 'N/A'}</p>
+                    <small>${addressStatus}</small>
+                </div>
+                <div class="approval-buttons">
+                    <button class="btn-primary btn-small" onclick="App.approveUser(${user.id})">Approve User</button>
+                    <button class="btn-primary btn-small" onclick="App.approveUserAddresses(${user.id})">Approve Addresses</button>
+                    <button class="btn-danger btn-small" onclick="App.rejectUser(${user.id})">Reject</button>
                 </div>
             `;
-            list.appendChild(item);
+            container.appendChild(card);
+        });
+    },
+
+    renderShiftSlotsList() {
+        const container = document.getElementById('shiftsContainer');
+        container.innerHTML = '';
+
+        if (!this.state.config?.ShiftSlots?.length) {
+            container.innerHTML = '<div class="empty-state">No shift slots</div>';
+            return;
+        }
+
+        this.state.config.ShiftSlots.forEach(slot => {
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.innerHTML = `
+                <div class="item-info">
+                    <strong>${slot.name}</strong>
+                    <small>${this.formatTime(slot.start_time)} - ${this.formatTime(slot.end_time)}</small>
+                </div>
+                <button class="btn-danger btn-small" onclick="App.deleteShiftSlot(${slot.id})">Delete</button>
+            `;
+            container.appendChild(item);
+        });
+    },
+
+    renderLocationsList() {
+        const container = document.getElementById('locationsContainer');
+        container.innerHTML = '';
+
+        if (!this.state.config?.Locations?.length) {
+            container.innerHTML = '<div class="empty-state">No locations</div>';
+            return;
+        }
+
+        this.state.config.Locations.forEach(loc => {
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.innerHTML = `
+                <div class="item-info">
+                    <strong>${loc.name}</strong>
+                    <small>${loc.address || 'No address'}</small>
+                </div>
+                <button class="btn-danger btn-small" onclick="App.deleteLocation(${loc.id})">Delete</button>
+            `;
+            container.appendChild(item);
+        });
+    },
+
+    renderRostersList() {
+        const container = document.getElementById('rostersContainer');
+        container.innerHTML = '';
+
+        if (!this.state.rosters?.length) {
+            container.innerHTML = '<div class="empty-state">No rosters</div>';
+            return;
+        }
+
+        this.state.rosters.forEach(roster => {
+            const slot = this.state.config?.ShiftSlots?.find(s => s.id === roster.shift_slot_id);
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.innerHTML = `
+                <div class="item-info">
+                    <strong>${slot?.name || 'Unknown'}</strong>
+                    <small>${new Date(roster.roster_date).toLocaleDateString()} • ${roster.status}</small>
+                </div>
+                <div>
+                    ${roster.status === 'Open' ? `<button class="btn-danger btn-small" onclick="App.freezeRoster(${roster.id})">Freeze</button>` : ''}
+                    ${roster.status !== 'Open' ? `<button class="btn-success btn-small" onclick="App.exportRoster(${roster.id})">Export</button>` : ''}
+                </div>
+            `;
+            container.appendChild(item);
         });
     },
 
     async deleteShiftSlot(id) {
-        if (confirm('Delete this shift slot?')) {
+        if (confirm('Delete this shift?')) {
             try {
                 await API.shiftSlots.delete(id);
-                alert('Shift slot deleted');
                 await this.loadConfig();
                 this.renderShiftSlotsList();
             } catch (error) {
@@ -445,9 +473,44 @@ const App = {
         if (confirm('Delete this location?')) {
             try {
                 await API.locations.delete(id);
-                alert('Location deleted');
                 await this.loadConfig();
                 this.renderLocationsList();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    },
+
+    async approveUser(id) {
+        if (confirm('Approve this user?')) {
+            try {
+                await API.users.approve(id);
+                await this.loadPendingUsers();
+                this.renderPendingUsersList();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    },
+
+    async rejectUser(id) {
+        if (confirm('Reject this user?')) {
+            try {
+                await API.users.reject(id);
+                await this.loadPendingUsers();
+                this.renderPendingUsersList();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    },
+
+    async approveUserAddresses(id) {
+        if (confirm('Approve these addresses?')) {
+            try {
+                await API.users.approveAddresses(id);
+                await this.loadPendingUsers();
+                this.renderPendingUsersList();
             } catch (error) {
                 alert('Error: ' + error.message);
             }
@@ -458,7 +521,6 @@ const App = {
         if (confirm('Freeze this roster?')) {
             try {
                 await API.rosters.freeze(id);
-                alert('Roster frozen');
                 await this.loadRosters();
                 this.renderRostersList();
             } catch (error) {
@@ -478,45 +540,6 @@ const App = {
             a.click();
         } catch (error) {
             alert('Error: ' + error.message);
-        }
-    },
-
-    async approveUser(id) {
-        if (confirm('Approve this user?')) {
-            try {
-                await API.users.approve(id);
-                alert('User approved!');
-                await this.loadPendingUsers();
-                this.renderPendingUsersList();
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-    },
-
-    async rejectUser(id) {
-        if (confirm('Reject this user?')) {
-            try {
-                await API.users.reject(id);
-                alert('User rejected');
-                await this.loadPendingUsers();
-                this.renderPendingUsersList();
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
-        }
-    },
-
-    async approveUserAddresses(id) {
-        if (confirm('Approve these addresses?')) {
-            try {
-                await API.users.approveAddresses(id);
-                alert('Addresses approved!');
-                await this.loadPendingUsers();
-                this.renderPendingUsersList();
-            } catch (error) {
-                alert('Error: ' + error.message);
-            }
         }
     },
 
@@ -561,14 +584,10 @@ const App = {
         if (!timeStr) return '';
         const [hours, minutes] = timeStr.split(':');
         return `${hours}:${minutes}`;
-    },
-
-    setupEventListeners() {
-        // Global event listeners if needed
     }
 };
 
-// Initialize app when DOM is ready
+// Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     App.init();
     registerServiceWorker();
@@ -579,67 +598,49 @@ function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
             .then(registration => {
-                console.log('Service Worker registered:', registration);
-
-                // Check for updates
+                console.log('Service Worker registered');
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('New service worker available - update available');
-                            // Optionally show update notification to user
                             showUpdateNotification();
                         }
                     });
                 });
             })
-            .catch(error => {
-                console.error('Service Worker registration failed:', error);
-            });
-
-        // Listen for message from service worker
-        navigator.serviceWorker.addEventListener('message', event => {
-            if (event.data.type === 'SW_ACTIVATED') {
-                console.log('Service Worker activated');
-            }
-        });
+            .catch(error => console.error('Service Worker registration failed:', error));
     }
 }
 
-// Show update notification
 function showUpdateNotification() {
     const message = document.createElement('div');
     message.style.cssText = `
         position: fixed;
-        bottom: 1rem;
+        bottom: 80px;
         left: 1rem;
         right: 1rem;
-        background: #10b981;
-        color: white;
+        background: #000;
+        color: #fff;
         padding: 1rem;
         border-radius: 8px;
-        z-index: 1000;
+        z-index: 100;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     `;
     message.innerHTML = `
-        <span>📦 Update available - Reload to get the latest version</span>
-        <button style="background: white; color: #10b981; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: 600;" onclick="window.location.reload()">Reload</button>
+        <span>Update available</span>
+        <button style="background: #fff; color: #000; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: 600; margin-left: 1rem;" onclick="window.location.reload()">Reload</button>
     `;
     document.body.appendChild(message);
 }
 
-// Handle install prompt
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
-    console.log('Install prompt available');
-    // Store event for later use
     window.installPrompt = e;
 });
 
 window.addEventListener('appinstalled', () => {
-    console.log('PWA installed');
     window.installPrompt = null;
 });
