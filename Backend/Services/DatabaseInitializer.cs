@@ -62,8 +62,8 @@ public class DatabaseInitializer(NpgsqlDataSource dataSource, ILogger<DatabaseIn
             // Insert test user
             using var userCmd = conn.CreateCommand();
             userCmd.CommandText = @"
-                INSERT INTO users (tenant_id, email, phone_number, name, role, is_active, created_at, updated_at)
-                VALUES (@TenantId, 'test@example.com', '1234567890', 'Test User', 'Employee', true, NOW(), NOW())";
+                INSERT INTO users (tenant_id, email, phone_number, name, pickup_address, dropoff_address, address_status, role, status, is_active, created_at, updated_at)
+                VALUES (@TenantId, 'test@example.com', '1234567890', 'Test User', '123 Main Street', '456 Oak Avenue', 'approved', 'Employee', 'approved', true, NOW(), NOW())";
             userCmd.Parameters.AddWithValue("@TenantId", tenantId);
             await userCmd.ExecuteNonQueryAsync();
 
@@ -112,9 +112,13 @@ CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
     tenant_id BIGINT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     email VARCHAR(255) NOT NULL,
-    phone_number VARCHAR(20) NOT NULL,
+    phone_number VARCHAR(20),
     name VARCHAR(255),
+    pickup_address VARCHAR(500),
+    dropoff_address VARCHAR(500),
+    address_status VARCHAR(50) DEFAULT 'pending',
     role VARCHAR(50) DEFAULT 'Employee',
+    status VARCHAR(50) DEFAULT 'pending',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -123,6 +127,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
 
 -- Shift Slots (configurable shift times)
 CREATE TABLE IF NOT EXISTS shift_slots (

@@ -55,6 +55,10 @@ const API = {
 
         verifyOtp(email, otp, tenantId) {
             return API.request('POST', '/auth/verify-otp', { email, otp, tenantId });
+        },
+
+        signup(email, phoneNumber, name, pickupAddress, dropoffAddress, tenantId) {
+            return API.request('POST', '/auth/signup', { email, phoneNumber, name, pickupAddress, dropoffAddress, tenantId });
         }
     },
 
@@ -164,6 +168,33 @@ const API = {
 
         delete(id) {
             return API.request('DELETE', `/location/${id}`);
+        }
+    },
+
+    // User endpoints (admin)
+    users: {
+        getPending() {
+            return API.request('GET', '/user/pending');
+        },
+
+        approve(userId) {
+            return API.request('POST', `/user/${userId}/approve`);
+        },
+
+        reject(userId) {
+            return API.request('POST', `/user/${userId}/reject`);
+        },
+
+        approveAddresses(userId) {
+            return API.request('POST', `/user/${userId}/approve-addresses`);
+        },
+
+        updateAddresses(userId, pickupAddress, dropoffAddress) {
+            return API.request('PUT', `/user/${userId}/addresses`, { pickupAddress, dropoffAddress });
+        },
+
+        get(userId) {
+            return API.request('GET', `/user/${userId}`);
         }
     },
 

@@ -60,6 +60,12 @@ public class AuthService(NpgsqlDataSource dataSource, IConfiguration config)
             return null;
         }
 
+        // Check if user is approved
+        if (user.Status != "approved")
+        {
+            throw new InvalidOperationException($"User account is {user.Status}. Please wait for admin approval.");
+        }
+
         // Get latest OTP attempt
         var otpAttempt = await conn.QueryFirstOrDefaultAsync<OtpAttempt>(
             @"SELECT * FROM otp_attempts

@@ -23,6 +23,8 @@ builder.Services.AddScoped<RosterService>();
 builder.Services.AddScoped<ShiftSlotService>();
 builder.Services.AddScoped<LocationService>();
 builder.Services.AddScoped<TenantService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<DatabaseInitializer>();
 
 // JWT Authentication

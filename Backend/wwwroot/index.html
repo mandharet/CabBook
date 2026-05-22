@@ -52,24 +52,65 @@
     <!-- Pages -->
     <script id="auth-page" type="text/html">
         <div class="form-container">
-            <h2>Login to CabBook</h2>
-            <form id="loginForm" class="form">
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required placeholder="Enter your email">
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Send OTP</button>
-                <p id="otpMessage" style="display:none; margin-top:1rem; color:#666;">
-                    OTP sent! Enter it below:
-                </p>
-                <div id="otpSection" style="display:none;">
+            <div class="tabs" style="margin-bottom: 1.5rem;">
+                <button class="tab-btn auth-tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn auth-tab-btn" data-tab="signup">Sign Up</button>
+            </div>
+
+            <!-- Login Tab -->
+            <div id="login" class="tab-content auth-tab active">
+                <h2>Login to CabBook</h2>
+                <form id="loginForm" class="form">
                     <div class="form-group">
-                        <label for="otp">OTP:</label>
-                        <input type="text" id="otp" name="otp" placeholder="6-digit code" maxlength="6">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" required placeholder="Enter your email">
                     </div>
-                    <button type="button" class="btn btn-success btn-block" id="verifyBtn">Verify OTP</button>
-                </div>
-            </form>
+                    <button type="submit" class="btn btn-primary btn-block">Send OTP</button>
+                    <p id="otpMessage" style="display:none; margin-top:1rem; color:#666;">
+                        OTP sent! Enter it below:
+                    </p>
+                    <div id="otpSection" style="display:none;">
+                        <div class="form-group">
+                            <label for="otp">OTP:</label>
+                            <input type="text" id="otp" name="otp" placeholder="6-digit code" maxlength="6">
+                        </div>
+                        <button type="button" class="btn btn-success btn-block" id="verifyBtn">Verify OTP</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Signup Tab -->
+            <div id="signup" class="tab-content auth-tab">
+                <h2>Sign Up for CabBook</h2>
+                <form id="signupForm" class="form">
+                    <div class="form-group">
+                        <label for="signupEmail">Email (required):</label>
+                        <input type="email" id="signupEmail" name="email" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="signupName">Name (optional):</label>
+                            <input type="text" id="signupName" name="name" placeholder="Your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPhone">Phone (optional):</label>
+                            <input type="tel" id="signupPhone" name="phone" placeholder="+1 234 567 8900">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPickup">📍 Pickup Address (required):</label>
+                        <input type="text" id="signupPickup" name="pickup" required placeholder="Your usual pickup location">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupDropoff">📍 Dropoff Address (required):</label>
+                        <input type="text" id="signupDropoff" name="dropoff" required placeholder="Your usual dropoff location">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-block">Sign Up</button>
+                    <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+                        After signing up, an admin will review and approve your account and addresses.
+                    </p>
+                </form>
+            </div>
         </div>
     </script>
 
@@ -134,9 +175,19 @@
             <h2>Admin Panel</h2>
 
             <div class="tabs">
-                <button class="tab-btn active" data-tab="shift-slots">Shift Slots</button>
+                <button class="tab-btn active" data-tab="pending-users">Pending Users</button>
+                <button class="tab-btn" data-tab="shift-slots">Shift Slots</button>
                 <button class="tab-btn" data-tab="locations">Locations</button>
                 <button class="tab-btn" data-tab="rosters">Rosters</button>
+            </div>
+
+            <!-- Pending Users Tab -->
+            <div id="pending-users" class="tab-content active">
+                <h3>User Approvals</h3>
+                <p style="color: #666; margin-bottom: 1.5rem;">Pending signup requests waiting for your approval:</p>
+                <div id="pendingUsersList" class="list">
+                    <!-- Pending users will be rendered here -->
+                </div>
             </div>
 
             <!-- Shift Slots Tab -->

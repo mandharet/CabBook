@@ -8,6 +8,7 @@ const App = {
         shiftSlots: [],
         locations: [],
         rosters: [],
+        pendingUsers: [],
         tenantId: 1 // Default, should come from config
     },
 
@@ -106,6 +107,17 @@ const App = {
     },
 
     setupAuthPage() {
+        // Tab switching for auth pages
+        document.querySelectorAll('.auth-tab-btn').forEach(btn => {
+            btn.onclick = (e) => {
+                document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                document.getElementById(e.target.dataset.tab).classList.add('active');
+            };
+        });
+
+        // Login form
         const form = document.getElementById('loginForm');
         const otpSection = document.getElementById('otpSection');
         const otpMessage = document.getElementById('otpMessage');
@@ -130,6 +142,27 @@ const App = {
                     await this.loadConfig();
                     window.location.hash = '#/';
                 };
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        };
+
+        // Signup form
+        const signupForm = document.getElementById('signupForm');
+        signupForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signupEmail').value;
+            const name = document.getElementById('signupName').value || null;
+            const phone = document.getElementById('signupPhone').value || null;
+            const pickupAddress = document.getElementById('signupPickup').value;
+            const dropoffAddress = document.getElementById('signupDropoff').value;
+
+            try {
+                await API.auth.signup(email, phone, name, pickupAddress, dropoffAddress, this.state.tenantId);
+                alert('Signup successful! Admin will review and approve your account and addresses.');
+                signupForm.reset();
+                // Switch back to login tab
+                document.querySelector('[data-tab="login"]').click();
             } catch (error) {
                 alert('Error: ' + error.message);
             }
@@ -226,6 +259,7 @@ const App = {
     async setupAdminPage() {
         await this.loadConfig();
         await this.loadRosters();
+        await this.loadPendingUsers();
 
         // Tab switching
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -236,6 +270,9 @@ const App = {
                 document.getElementById(e.target.dataset.tab).classList.add('active');
             };
         });
+
+        // Render pending users
+        this.renderPendingUsersList();
 
         // Shift Slots
         const createShiftForm = document.getElementById('createShiftForm');
@@ -348,6 +385,46 @@ const App = {
         });
     },
 
+    renderPendingUsersList() {
+        const list = document.getElementById('pendingUsersList');
+        if (!list) return;
+
+        list.innerHTML = '';
+
+        if (!this.state.pendingUsers || this.state.pendingUsers.length === 0) {
+            list.innerHTML = '<p style="color: #999; text-align: center; padding: 2rem;">No pending approvals</p>';
+            return;
+        }
+
+        this.state.pendingUsers.forEach(user => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            const addressStatus = user.address_status === 'approved'
+                ? '✅ Addresses approved'
+                : '⏳ Addresses pending';
+
+            item.innerHTML = `
+                <div style="flex: 1;">
+                    <strong>${user.name || 'N/A'}</strong><br>
+                    ${user.email}<br>
+                    ${user.phone_number ? `📞 ${user.phone_number}<br>` : ''}
+                    <div style="margin-top: 0.5rem; background: #f0f0f0; padding: 0.5rem; border-radius: 4px; font-size: 0.85rem;">
+                        <strong>📍 Pickup:</strong> ${user.pickup_address || 'Not provided'}<br>
+                        <strong>📍 Dropoff:</strong> ${user.dropoff_address || 'Not provided'}<br>
+                        <small style="color: #666;">${addressStatus}</small>
+                    </div>
+                    <small style="color: #999; margin-top: 0.5rem;">Requested: ${new Date(user.created_at).toLocaleDateString()}</small>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <button class="btn btn-small btn-success" onclick="App.approveUser(${user.id})">Approve User</button>
+                    <button class="btn btn-small btn-info" onclick="App.approveUserAddresses(${user.id})">Approve Addresses</button>
+                    <button class="btn btn-small btn-danger" onclick="App.rejectUser(${user.id})">Reject</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    },
+
     async deleteShiftSlot(id) {
         if (confirm('Delete this shift slot?')) {
             try {
@@ -401,6 +478,45 @@ const App = {
         }
     },
 
+    async approveUser(id) {
+        if (confirm('Approve this user?')) {
+            try {
+                await API.users.approve(id);
+                alert('User approved!');
+                await this.loadPendingUsers();
+                this.renderPendingUsersList();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    },
+
+    async rejectUser(id) {
+        if (confirm('Reject this user?')) {
+            try {
+                await API.users.reject(id);
+                alert('User rejected');
+                await this.loadPendingUsers();
+                this.renderPendingUsersList();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    },
+
+    async approveUserAddresses(id) {
+        if (confirm('Approve these addresses?')) {
+            try {
+                await API.users.approveAddresses(id);
+                alert('Addresses approved!');
+                await this.loadPendingUsers();
+                this.renderPendingUsersList();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    },
+
     async loadConfig() {
         try {
             this.state.config = await API.tenant.getConfig();
@@ -426,6 +542,15 @@ const App = {
             this.state.rosters = await API.rosters.list(from, to);
         } catch (error) {
             console.error('Error loading rosters:', error);
+        }
+    },
+
+    async loadPendingUsers() {
+        try {
+            const result = await API.users.getPending();
+            this.state.pendingUsers = result.users || [];
+        } catch (error) {
+            console.error('Error loading pending users:', error);
         }
     },
 
