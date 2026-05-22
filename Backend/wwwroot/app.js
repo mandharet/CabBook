@@ -135,12 +135,15 @@ const App = {
 
                 verifyBtn.onclick = async () => {
                     const otp = document.getElementById('otp').value;
-                    const token = await API.auth.verifyOtp(email, otp, this.state.tenantId);
-
-                    API.setToken(token);
-                    this.state.user = this.parseJwt(token);
-                    await this.loadConfig();
-                    window.location.hash = '#/';
+                    try {
+                        const token = await API.auth.verifyOtp(email, otp, this.state.tenantId);
+                        API.setToken(token);
+                        this.state.user = this.parseJwt(token);
+                        await this.loadConfig();
+                        window.location.hash = '#/';
+                    } catch (error) {
+                        alert('Login failed: ' + error.message);
+                    }
                 };
             } catch (error) {
                 alert('Error: ' + error.message);

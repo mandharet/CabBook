@@ -23,18 +23,20 @@ const API = {
         try {
             const response = await fetch(url, options);
 
-            if (response.status === 401) {
-                localStorage.removeItem('token');
-                window.location.hash = '#/';
-                throw new Error('Unauthorized');
-            }
-
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/json')) {
                 return response;
             }
 
             const body = await response.json();
+
+            // Only redirect on 401 if it's an authenticated request (has Authorization header)
+            // This prevents redirecting on 401 responses from public endpoints like /verify-otp
+            if (response.status === 401 && options.headers['Authorization']) {
+                localStorage.removeItem('token');
+                window.location.hash = '#/';
+                throw new Error('Session expired. Please login again.');
+            }
 
             if (!response.ok) {
                 throw new Error(body.error || `HTTP ${response.status}`);
